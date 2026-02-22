@@ -1,0 +1,5 @@
+mysql-data
+*.log
+*.pid
+__pycache__
+db.sqlite3
