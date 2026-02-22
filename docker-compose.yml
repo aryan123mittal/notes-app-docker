@@ -46,7 +46,8 @@ services:
       - ".env"
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - notes-app
     healthcheck:
