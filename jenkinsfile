@@ -1,0 +1,327 @@
+new_item > name (DjangoCICD) > pipeline > ok 
+Description (This is a CICD for a Django App) > Github project (✅) ; project_url (https://github.com/aryan123mittal/notes-app-docker.git) ; Display_Name (Django Notes App) > Github hook trigger for GITScm polling (✅) > pipeline script 
+
+
+pipeline{
+    agent { label "vinod" }
+    
+    stages{
+        
+        stage("Code"){
+            steps{
+                echo "this is cloning the code"
+            }
+        }
+        stage("Build"){
+            steps{
+                echo "this is building the code"
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "this is testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                echo "this is deploying the code"
+            }
+        }
+    }
+    
+}
+
+
+
+save > build now > build is successful
+
+//but if we want to see the pipeline if front add a plugin
+manage jenkins > Pulgins > Available plugins >  Pipeline: Stage View  > Install > Restart
+after login > dashboard (clicl on) > django CICD (you will see the pipeline view of your build)
+
+//now add main thing inside the pipeline > configure > edit the pipeline script
+
+
+
+////////now our main motive of this project and flow would be like this : 
+
+code on github (git clone) > build through docker > push code on docker hub > deploy on ec2 instance
+
+//in first step we will only clone the code and test whether code is cloning or not
+pipeline{
+    agent { label "vinod" }
+    
+    stages{
+        
+        stage("Code"){
+            steps{
+                echo "this is cloning the code"
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+                echo "code cloning successfully"
+            }
+        }
+        stage("Build"){
+            steps{
+                echo "this is building the code"
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "this is testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                echo "this is deploying the code"
+            }
+        }
+    }
+    
+}
+
+
+save > build now >  check logs
+//on agent node check git is clone or not
+
+ubuntu@ip-172-31-29-203:~/workspace$ ls
+DemoCICD  DemoCICD@tmp  DjangoCICD
+
+ubuntu@ip-172-31-29-203:~/workspace$ cd DjangoCICD/
+
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ ls
+Dockerfile   Procfile   api         docker-compose.yml  mynotes  notesapp          staticfiles
+Jenkinsfile  README.md  db.sqlite3  manage.py           nginx    requirements.txt
+
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ 
+
+//now build, so we need docker
+//installing docker on agent
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ sudo apt-get install docker.io
+
+//modify user add user in docker group of current user and refresh it
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ sudo usermod -aG docker $USER && newgrp docker
+
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+//docker file is in our repo
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ ls
+Dockerfile   Procfile   api         docker-compose.yml  mynotes  notesapp          staticfiles
+Jenkinsfile  README.md  db.sqlite3  manage.py           nginx    requirements.txt
+
+//so we add sh command in pipeline to build the docker image
+pipeline{
+    agent { label "vinod" }
+    
+    stages{
+        
+        stage("Code"){
+            steps{
+                echo "this is cloning the code"
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+                echo "code cloning successfully"
+            }
+        }
+        stage("Build"){
+            steps{
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "this is testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                echo "this is deploying the code"
+            }
+        }
+    }
+    
+}   
+
+
+
+save > build now 
+//error :permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
+//after build you will getting error of permission so try to restart the agent node and also restart jenkins at master node
+
+//on master node
+ubuntu@ip-172-31-19-131:~/.ssh$ sudo systemctl restart jenkins
+
+//on agent node
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ sudo reboot
+
+ubuntu@ip-172-31-29-203:~$ docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+//now build again
+build now > click on number to see the output of the pipeline
+Finished: SUCCESS
+
+//check the docker image on agent node
+ubuntu@ip-172-31-29-203:~$ docker images
+REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
+notes-app    latest    95efbb0b6195   26 seconds ago   1.34GB
+python       3.9       bcd3da597491   3 months ago     1.09GB
+
+ubuntu@ip-172-31-29-203:~$ 
+
+//if you have test case then you can add them write now we don't have any test case so now deploying the application
+//now running or deploying this application
+configure > edit pipeline
+
+pipeline{
+    agent { label "vinod" }
+    
+    stages{
+        
+        stage("Code"){
+            steps{
+                echo "this is cloning the code"
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+                echo "code cloning successfully"
+            }
+        }
+        stage("Build"){
+            steps{
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "this is testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                echo "this is deploying the code"
+                sh "docker run -d -p 8000:8000 notes-app:latest"
+            }
+        }
+    }
+    
+}
+
+save > build now > successfully deployed
+
+//now add port 8000 in security group of ec2 instance
+http://54.215.25.138:8000
+//now application is running successfully
+
+
+
+//but when we agaon build the same pipeline it fails as the port is already occupied. So, we buil it through docker-compose
+//Now, deploying it through docker-cpmpose
+//install docker-compose on agent node
+ubuntu@ip-172-31-29-203:~/workspace/DjangoCICD$ sudo apt-get install docker-compose-v2
+
+ configure > pipeline > edit
+ 
+pipeline{
+    agent { label "vinod" }
+    
+    stages{
+        
+        stage("Code"){
+            steps{
+                echo "this is cloning the code"
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+                echo "code cloning successfully"
+            }
+        }
+        stage("Build"){
+            steps{
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+        stage("Test"){
+            steps{
+                echo "this is testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                echo "this is deploying the code"
+                sh "docker compose up -d"
+            }
+        }
+    }
+    
+}
+
+save > build now
+
+
+docker compose down
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+
+sudo rm -rf /home/ubuntu/workspace/DjangoCICD/mysql-data
+sudo rm -rf /home/ubuntu/workspace/DjangoCICD/mysql-data/*
+mkdir /home/ubuntu/workspace/DjangoCICD/mysql-data
+sudo chmod -R 777 /home/ubuntu/workspace/DjangoCICD/mysql-data
+
+
+
+configure > pipeline script > edit
+
+pipeline {
+    agent { label "vinod" }
+
+    stages {
+
+        stage("Code") {
+            steps {
+                echo "this is cloning the code"
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+            }
+        }
+
+        stage("Cleanup") {
+            steps {
+                echo "Cleaning Docker & MySQL data"
+                sh """
+                docker compose down -v || true
+                docker rm -f \$(docker ps -aq) || true
+                docker volume prune -f || true
+
+                sudo rm -rf mysql-data || true
+                mkdir -p mysql-data
+                sudo chmod -R 777 mysql-data
+                """
+            }
+        }
+
+        stage("Build") {
+            steps {
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                echo "this is deploying the code"
+                sh "docker compose up -d --build"
+            }
+        }
+    }
+}
+
+
+save > build now > check output
+http://54.215.25.138:8000
+
+//Run Successfully
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
