@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: test_db
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - notes-app
     healthcheck:
@@ -48,3 +48,6 @@ services:
 
 networks:
   notes-app:
+
+volumes:
+  mysql_data:
