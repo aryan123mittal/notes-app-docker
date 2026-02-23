@@ -1,0 +1,48 @@
+@Library('Shared') _
+
+pipeline {
+    agent { label "vinod" }
+
+    stages {
+
+        stage("Code") {
+            steps {
+                script{
+                    clone("https://github.com/aryan123mittal/notes-app-docker.git","main")   //as per syntax we define in shared_libraries
+                }
+            }
+        }
+
+        stage("Build") {
+            steps {
+                script{
+                    docker_build("notes-app","latest","aryan5802")
+                }
+            }
+        }
+
+        stage("Push to DockerHub") {
+            steps {
+                script{
+                    docker_build("notes-app","latest","aryan5802")
+                }
+            }
+        }
+        
+        stage("Deploy") {
+            steps {
+                echo "this is deploying the code"
+                sh "docker compose up -d --build"
+            }
+        }
+    }
+    post {
+        always {
+            echo "🧹 Cleaning dangling Docker images"
+
+            sh """
+            docker image prune -f || true
+            """
+        }
+    }
+}
