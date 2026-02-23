@@ -344,7 +344,7 @@ pipeline {
         stage("Code") {
             steps {
                 echo "this is cloning the code"
-                cleanWs()  //// 🔥 prevents old mysql-data / permission issues
+                cleanWs()
                 git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
             }
         }
@@ -380,6 +380,15 @@ pipeline {
                 echo "this is deploying the code"
                 sh "docker compose up -d --build"
             }
+        }
+    }
+    post {
+        always {
+            echo "🧹 Cleaning dangling Docker images"
+
+            sh """
+            docker image prune -f || true
+            """
         }
     }
 }
