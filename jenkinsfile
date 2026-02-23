@@ -396,3 +396,14 @@ pipeline {
 save > build now
 http://54.215.25.138:8000
 //run successfully
+
+
+
+
+github webhook : A GitHub Webhook is a way for GitHub to automatically notify another system when something happens in your repository.
+
+https://github.com/aryan123mittal/notes-app-docker/tree/main
+
+settings (inside that repo) > Webhooks > Add Webhook > Payload URL (http://18.144.56.227:8080/github-webhook/) > content type (application/urlencoded) > SSL (disable) > send me everything > Add Webhook (if not showing green tick redeliver it)
+
+Now, when we changes any in repo of github and commit it. They will automatically deploy on jekins.
