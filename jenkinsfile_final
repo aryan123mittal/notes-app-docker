@@ -1,0 +1,51 @@
+pipeline {
+    agent { label "vinod" }
+
+    stages {
+
+        stage("Code") {
+            steps {
+                echo "this is cloning the code"
+                cleanWs()  
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+            }
+        }
+
+        stage("Build") {
+            steps {
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+
+        stage("Push to DockerHub") {
+            steps {
+                echo "this is pushing the image to Docker Hub"
+
+                withCredentials([usernamePassword(
+                    credentialsId: "DockerHubCred",
+                    usernameVariable: "DockerHubUser",
+                    passwordVariable: "DockerHubPass"
+                )]) {
+
+                    sh """
+                    docker login -u ${DockerHubUser} -p ${DockerHubPass}
+                    docker image tag notes-app:latest ${DockerHubUser}/notes-app:latest
+                    docker push ${DockerHubUser}/notes-app:latest
+                    """
+                }
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                echo "this is deploying the code"
+                sh "docker compose up -d --build"
+            }
+        }
+    }
+}
+
+save > build now
+http://54.215.25.138:8000
+//run successfully
