@@ -267,6 +267,8 @@ mkdir /home/ubuntu/workspace/DjangoCICD/mysql-data
 sudo chmod -R 777 /home/ubuntu/workspace/DjangoCICD/mysql-data
 
 
+sudo rm -rf /home/ubuntu/workspace/DjangoCICD/*
+
 
 configure > pipeline script > edit
 
@@ -318,10 +320,70 @@ save > build now > check output
 http://54.215.25.138:8000
 
 //Run Successfully
+//bu there is a problem in this we have to delete our db again and again which is not a good practice because of some permission issue now resolve this issue 
 
------------------------------------------------------------------------------------------------------------------------
+//now. we add in this we can push the image in docker-hub
+//login into docker hub
+
+//for docker hub password
+dashboard > manage jenkins > credentials > global (below in system) > add credentials > username with password > username (aryan5802) > password (paste PAT) > ID (DockerHubCred) > Description (DockerHubCred) > Create
+
+docker hub > account setting > personal access token > generate new token > description (jenkins-notes-app) > access permission (Read and Write) > generate > copy token (paste PAT) > add them in password field
+
+//on agent node
+docker compose down
 
 
+configure > edit pipeline 
 
+pipeline {
+    agent { label "vinod" }
 
+    stages {
 
+        stage("Code") {
+            steps {
+                echo "this is cloning the code"
+                cleanWs()  //// 🔥 prevents old mysql-data / permission issues
+                git url: "https://github.com/aryan123mittal/notes-app-docker.git", branch: "main"
+            }
+        }
+
+        stage("Build") {
+            steps {
+                echo "this is building the code"
+                sh "docker build -t notes-app:latest ."
+            }
+        }
+
+        stage("Push to DockerHub") {
+            steps {
+                echo "this is pushing the image to Docker Hub"
+
+                withCredentials([usernamePassword(
+                    credentialsId: "DockerHubCred",
+                    usernameVariable: "DockerHubUser",
+                    passwordVariable: "DockerHubPass"
+                )]) {
+
+                    sh """
+                    docker login -u ${DockerHubUser} -p ${DockerHubPass}
+                    docker image tag notes-app:latest ${DockerHubUser}/notes-app:latest
+                    docker push ${DockerHubUser}/notes-app:latest
+                    """
+                }
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                echo "this is deploying the code"
+                sh "docker compose up -d --build"
+            }
+        }
+    }
+}
+
+save > build now
+http://54.215.25.138:8000
+//run successfully
