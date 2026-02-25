@@ -1,5 +1,5 @@
 new_item > name (DjangoCICD) > pipeline > ok 
-Description (This is a CICD for a Django App) > Github project (✅) ; project_url (https://github.com/aryan123mittal/notes-app-docker.git) ; Display_Name (Django Notes App) > Github hook trigger for GITScm polling (✅) > pipeline script 
+Description (This is a CICD for a Django notes-app ) > Github project (✅) ; project_url (https://github.com/aryan123mittal/notes-app-docker.git) ; Display_Name (Django Notes App) > Github hook trigger for GITScm polling (✅) > pipeline script 
 
 
 pipeline{
